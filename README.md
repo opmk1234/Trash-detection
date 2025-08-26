@@ -3,6 +3,11 @@ Real-Time Scrap Classifier & Robotic Pick Simulation
 ## Overview
 This project is a mini simulation of an industrial scrap sorting vision pipeline.  
 It demonstrates real-time detection of recyclable materials and simulates robotic pick-point generation.
+## Components
+- **model.ipynb**: Jupyter notebook for dataset preparation and training YOLOv8n on TACO subset.
+- **best.pt**: Trained YOLOv8 model weights.
+- **realtime.py**: Real-time conveyor simulation with pick-point generation.
+- **report.pdf**: Short write-up explaining approach, challenges, and improvements.
 
 ## Objectives
 1. Detect recyclable waste items using a pre-trained YOLOv8 model.
@@ -19,7 +24,7 @@ It demonstrates real-time detection of recyclable materials and simulates roboti
 ## Model
 - Model: YOLOv8n (lightweight variant for faster inference)  
 - Training: Fine-tuned on the subset dataset  
-- Epochs: 10  
+- Epochs: 100  
 - Input size: 640x640  
 
 ## Pipeline
