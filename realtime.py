@@ -1,16 +1,65 @@
 from ultralytics import YOLO
-import matplotlib.pyplot as plt
 import cv2
+import time
 
-model = YOLO("best.pt")
+# Load trained YOLOv8 model
+model = YOLO("best.pt")  # adjust path if needed
 
-results = model.predict(source="datasets/images/val", save=False, conf=0.05)
+# Open webcam (0) or video file (replace with path)
+cap = cv2.VideoCapture(0)  # use "conveyor.mp4" for a conveyor simulation
 
-#results = model("dataset/images/val/400.jpg", conf=0.01)
-#results[0].show() 
-for r in results[:5]:  # show first 5 images
-    im = r.plot()  # annotated image (numpy array BGR)
-    im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
-    plt.imshow(im)
-    plt.axis("off")
-    plt.show()
+if not cap.isOpened():
+    print("Error: Could not open video source")
+    exit()
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    start = time.time()
+
+    # Run detection
+    results = model(frame, conf=0.3, verbose=False)
+
+    # Annotated frame
+    annotated = results[0].plot()
+
+    # Object counts
+    object_counts = {}
+
+    # Draw pick points
+    for box, cls in zip(results[0].boxes.xyxy, results[0].boxes.cls):
+        x1, y1, x2, y2 = box
+        cx, cy = int((x1 + x2) / 2), int((y1 + y2) / 2)
+
+        # Draw crosshair for pick point
+        cv2.drawMarker(
+            annotated, (cx, cy), (0, 0, 255),
+            markerType=cv2.MARKER_CROSS, markerSize=20, thickness=2
+        )
+
+        # Count detected objects
+        cls_name = model.names[int(cls)]
+        object_counts[cls_name] = object_counts.get(cls_name, 0) + 1
+
+    # FPS calculation
+    fps = 1.0 / (time.time() - start)
+
+    # Dashboard overlay
+    y0 = 30
+    for cls_name, count in object_counts.items():
+        cv2.putText(annotated, f"{cls_name}: {count}", (10, y0),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
+        y0 += 30
+    cv2.putText(annotated, f"FPS: {fps:.2f}", (10, y0),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
+    # Show the frame
+    cv2.imshow("Scrap Classifier Simulation", annotated)
+
+    if cv2.waitKey(1) & 0xFF == ord("q"):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
